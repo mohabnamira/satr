@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/journal_providers.dart';
 import 'new_entry_screen.dart';
-import '../features/lock/application/lock_providers.dart';
-import '../features/lock/presentation/pin_setup.dart';
 import '../features/prompts/application/prompt_providers.dart';
 import '../features/history/presentation/history_widgets.dart';
 import 'entry_view_screen.dart';
 import 'package:satr/core/greeting.dart';
 import 'package:satr/core/widgets/undo_toast.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -116,8 +115,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         IconButton(
                           icon: const Icon(Icons.settings_outlined),
                           tooltip: 'Settings',
-                          onPressed: () => showLockMenu(
-                              context, ref.read(pinRepositoryProvider)),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                          ),
                         ),
                       ],
                     ),

@@ -1,0 +1,107 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/lock/application/lock_providers.dart';
+import '../features/lock/presentation/pin_setup.dart';
+
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+
+  bool? _hasPin;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHasPin();
+  }
+
+  Future<void> _loadHasPin() async {
+    final value = await ref.read(pinRepositoryProvider).hasPin();
+    if (mounted) setState(() => _hasPin = value);
+  }
+
+  Future<void> _togglePin(bool enable) async {
+    final repo = ref.read(pinRepositoryProvider);
+    if (enable) {
+      await setPin(context, repo); 
+    } else {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Remove PIN lock?'),
+          content: const Text("You'll no longer need a PIN to open the app."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Remove'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true) await repo.clearPin();
+    }
+    await _loadHasPin(); 
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(height: 8),
+              Text('Settings', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 24),
+              if (_hasPin == null)
+                const Center(child: CircularProgressIndicator())
+              else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('PIN lock', style: theme.textTheme.bodyLarge),
+                    ),
+                    Switch(value: _hasPin!, onChanged: _togglePin),
+                  ],
+                ),
+                if (_hasPin!) ...[
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: () async {
+                      await setPin(context, ref.read(pinRepositoryProvider));
+                      await _loadHasPin();
+                    },
+                    child: Text(
+                      'Change PIN',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: colors.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+                Divider(height: 32, color: colors.outlineVariant),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

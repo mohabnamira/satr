@@ -8,7 +8,7 @@ Future<void> showLockMenu(BuildContext context, PinRepository repo) async {
   if (!context.mounted) return;
 
   if (!hasPin) {
-    _setPin(context, repo);
+    setPin(context, repo);
     return;
   }
   await showModalBottomSheet<void>(
@@ -22,7 +22,7 @@ Future<void> showLockMenu(BuildContext context, PinRepository repo) async {
             title: const Text('Change PIN'),
             onTap: () {
               Navigator.of(sheetContext).pop(); // close the sheet
-              _setPin(context, repo);
+              setPin(context, repo);
             },
           ),
           ListTile(
@@ -42,9 +42,8 @@ Future<void> showLockMenu(BuildContext context, PinRepository repo) async {
     ),
   );
 }
-
-void _setPin(BuildContext context, PinRepository repo) {
-  Navigator.of(context).push(MaterialPageRoute(
+Future<void> setPin(BuildContext context, PinRepository repo) {
+  return Navigator.of(context).push(MaterialPageRoute(
     builder: (_) => LockScreen(
       title: 'New PIN',
       canCancel: true,
@@ -57,7 +56,8 @@ void _setPin(BuildContext context, PinRepository repo) {
               if (second != first) return "PINs don't match";
               await repo.setPin(second);
               if (context.mounted) {
-                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
                 ScaffoldMessenger.of(context)
                     .showSnackBar(const SnackBar(content: Text('PIN saved')));
               }
