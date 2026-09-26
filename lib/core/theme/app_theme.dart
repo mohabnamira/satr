@@ -6,7 +6,7 @@ class AppTheme {
         const ColorScheme.light(
           surface: Color(0xFFFFFFFF), 
           onSurface: Color(0xFF000000), 
-          onSurfaceVariant: Color(0xFF8E8E93), 
+          onSurfaceVariant: Color(0xFF757575), 
           surfaceContainer: Color(0xFFF5F5F5), 
           surfaceContainerHighest: Color(0xFFEDEDED), 
           outlineVariant: Color(0xFFD1D1D6), 
