@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/lock/application/lock_providers.dart';
 import '../features/lock/presentation/pin_setup.dart';
 import '../data/journal_providers.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -12,20 +13,27 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-
   bool? _hasPin;
+  PackageInfo? _packageInfo;
 
   @override
   void initState() {
     super.initState();
     _loadHasPin();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _packageInfo = info);
   }
 
   Future<void> _loadHasPin() async {
     final value = await ref.read(pinRepositoryProvider).hasPin();
     if (mounted) setState(() => _hasPin = value);
   }
-    Future<void> _clearAllData() async {
+
+  Future<void> _clearAllData() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -40,7 +48,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text('Clear',
+            child: const Text('Clear',
                 style: TextStyle(color: Color(0xFFC62828))),
           ),
         ],
@@ -58,7 +66,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _togglePin(bool enable) async {
     final repo = ref.read(pinRepositoryProvider);
     if (enable) {
-      await setPin(context, repo); 
+      await setPin(context, repo);
     } else {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -79,7 +87,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
       if (confirmed == true) await repo.clearPin();
     }
-    await _loadHasPin(); 
+    await _loadHasPin();
   }
 
   @override
@@ -134,11 +142,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Icon(Icons.delete_forever_outlined,
                           color: const Color(0xFFC62828), size: 20),
                       const SizedBox(width: 12),
-                      Text('Clear all data',
-                          style: theme.textTheme.bodyLarge
-                              ?.copyWith(color: const Color(0xFFC62828))),
+                      Text(
+                        'Clear all data',
+                        style: theme.textTheme.bodyLarge
+                            ?.copyWith(color: const Color(0xFFC62828)),
+                      ),
                     ],
                   ),
+                ),
+                Divider(height: 32, color: colors.outlineVariant),
+                Row(
+                  children: [
+                    Text('Version', style: theme.textTheme.bodyLarge),
+                    const Spacer(),
+                    Text(
+                      _packageInfo == null
+                          ? '...'
+                          : '${_packageInfo!.version}+${_packageInfo!.buildNumber}',
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(color: colors.onSurfaceVariant),
+                    ),
+                  ],
                 ),
               ],
             ],
