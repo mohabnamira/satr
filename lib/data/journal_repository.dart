@@ -48,6 +48,9 @@ class JournalRepository {
   Future<void> restoreEntry(JournalEntry entry) async {
     await _box.put(entry.id, entry);
   }
+    Future<void> clearAllEntries() async {
+    await _box.clear();
+  }
 
   ValueListenable<Box<JournalEntry>> listenable() => _box.listenable();
 

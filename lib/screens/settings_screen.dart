@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/lock/application/lock_providers.dart';
 import '../features/lock/presentation/pin_setup.dart';
+import '../data/journal_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -23,6 +24,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _loadHasPin() async {
     final value = await ref.read(pinRepositoryProvider).hasPin();
     if (mounted) setState(() => _hasPin = value);
+  }
+    Future<void> _clearAllData() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear all data?'),
+        content: const Text(
+          'This permanently deletes every journal entry. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text('Clear',
+                style: TextStyle(color: Color(0xFFC62828))),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ref.read(journalRepositoryProvider).clearAllEntries();
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('All entries deleted')));
+    }
   }
 
   Future<void> _togglePin(bool enable) async {
@@ -97,6 +127,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
                 Divider(height: 32, color: colors.outlineVariant),
+                GestureDetector(
+                  onTap: _clearAllData,
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever_outlined,
+                          color: const Color(0xFFC62828), size: 20),
+                      const SizedBox(width: 12),
+                      Text('Clear all data',
+                          style: theme.textTheme.bodyLarge
+                              ?.copyWith(color: const Color(0xFFC62828))),
+                    ],
+                  ),
+                ),
               ],
             ],
           ),
