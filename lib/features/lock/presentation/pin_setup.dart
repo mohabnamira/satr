@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:satr/core/widgets/app_toast.dart';
 import '../data/pin_repository.dart';
 import 'lock_screen.dart';
 
@@ -32,8 +33,7 @@ Future<void> showLockMenu(BuildContext context, PinRepository repo) async {
               Navigator.of(sheetContext).pop();
               await repo.clearPin();
               if (context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('PIN removed')));
+                AppToast.show(context, message: 'pin removed');
               }
             },
           ),
@@ -58,8 +58,7 @@ Future<void> setPin(BuildContext context, PinRepository repo) {
               if (context.mounted) {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('PIN saved')));
+                AppToast.show(context, message: 'pin saved');
               }
               return null;
             },

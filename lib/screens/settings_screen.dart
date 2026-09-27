@@ -5,6 +5,8 @@ import '../features/lock/presentation/pin_setup.dart';
 import '../data/journal_providers.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:satr/core/widgets/app_toast.dart';
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -58,8 +60,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     await ref.read(journalRepositoryProvider).clearAllEntries();
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('All entries deleted')));
+      AppToast.show(context, message: 'all entries deleted');
     }
   }
 
@@ -85,7 +86,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
       );
-      if (confirmed == true) await repo.clearPin();
+      if (confirmed == true) {
+        await repo.clearPin();
+        if (mounted) {
+          AppToast.show(context, message: 'pin removed');
+        }
+      }
     }
     await _loadHasPin();
   }

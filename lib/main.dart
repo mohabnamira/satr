@@ -10,20 +10,24 @@ import 'package:satr/data/settings_repository.dart';
 
 final hapticsEnabledProvider = Provider<bool>((ref) => false);
 final themeModeProvider = Provider<ThemeMode>((ref) => ThemeMode.system);
+final isFirstLaunchProvider = StateProvider<bool>((ref) => true);
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  return SettingsRepository(Hive.box('settings'));
+});
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(JournalEntryAdapter());
   await Hive.openBox<JournalEntry>('journalEntries');
-  await Hive.openBox<JournalEntry>('journalEntries');
   await Hive.openBox('settings');
-    final hasPin = await PinRepository().hasPin();
+  final hasPin = await PinRepository().hasPin();
 
   final settingsRepo = SettingsRepository(Hive.box('settings'));
   final hapticsEnabled = settingsRepo.hapticsEnabled;
   final themeModeName = settingsRepo.themeModeName;
-  ThemeMode _themeModeFromName(String name) {
+  final isFirstLaunch = settingsRepo.isFirstLaunch;
+  ThemeMode themeModeFromName(String name) {
     switch (name) {
       case 'light':
         return ThemeMode.light;
@@ -38,7 +42,9 @@ void main() async {
       overrides: [
         unlockedProvider.overrideWith((ref) => !hasPin),
         hapticsEnabledProvider.overrideWith((ref) => hapticsEnabled),
-        themeModeProvider.overrideWith((ref) => _themeModeFromName(themeModeName)),
+        themeModeProvider.overrideWith((ref) => themeModeFromName(themeModeName)),
+        isFirstLaunchProvider.overrideWith((ref) => isFirstLaunch),
+        settingsRepositoryProvider.overrideWithValue(settingsRepo),
       ],
       child: const SatrApp(),
     ),

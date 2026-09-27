@@ -6,7 +6,7 @@ import '../features/prompts/application/prompt_providers.dart';
 import '../features/history/presentation/history_widgets.dart';
 import 'entry_view_screen.dart';
 import 'package:satr/core/greeting.dart';
-import 'package:satr/core/widgets/undo_toast.dart';
+import 'package:satr/core/widgets/app_toast.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -17,9 +17,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-
   bool _searching = false;
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   late final String greeting;
 
   @override
@@ -31,24 +31,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _toggleSearch() {
-    setState(() => _searching = !_searching);
-    if (!_searching) {
-
-      _searchController.clear();
-      ref.read(searchQueryProvider.notifier).state = '';
-    }
+    setState(() {
+      _searching = !_searching;
+      if (_searching) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _searchFocusNode.requestFocus();
+        });
+      } else {
+        _searchFocusNode.unfocus();
+        _searchController.clear();
+        ref.read(searchQueryProvider.notifier).state = '';
+      }
+    });
   }
-
 
   void _openEditor({bool withPrompt = false}) {
     final prompt =
         withPrompt ? ref.read(promptRepositoryProvider).randomPrompt() : null;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => NewEntryScreen(initialPrompt: prompt)),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return NewEntryScreen(initialPrompt: prompt);
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOutCubic,
+            ),
+            child: child,
+          );
+        },
+      ),
     );
   }
 
@@ -88,54 +109,109 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _searching
-                              ? TextField(
+                    SizedBox(
+                      height: 48,
+                      child: AnimatedCrossFade(
+                        duration: const Duration(milliseconds: 260),
+                        firstCurve: Curves.easeInOutCubic,
+                        secondCurve: Curves.easeInOutCubic,
+                        sizeCurve: Curves.easeInOutCubic,
+                        crossFadeState: _searching
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
+                        firstChild: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                greeting,
+                                style: theme.textTheme.headlineMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              tooltip: 'search',
+                              onPressed: _toggleSearch,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined),
+                              tooltip: 'settings',
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const SettingsScreen(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        secondChild: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainer,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: colors.outlineVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.search,
+                                  size: 20, color: colors.onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
                                   controller: _searchController,
-                                  autofocus: true,
+                                  focusNode: _searchFocusNode,
+                                  style: theme.textTheme.bodyLarge,
                                   onChanged: (value) => ref
                                       .read(searchQueryProvider.notifier)
                                       .state = value,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Search entries',
+                                  decoration: InputDecoration(
+                                    hintText: 'search entries...',
+                                    hintStyle: TextStyle(
+                                        color: colors.onSurfaceVariant),
                                     border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(vertical: 12),
                                   ),
-                                )
-                                : Text(greeting,
-                                  style: theme.textTheme.headlineMedium),
-                        ),
-                        IconButton(
-                          icon: Icon(_searching ? Icons.close : Icons.search),
-                          tooltip: _searching ? 'Close search' : 'Search',
-                          onPressed: _toggleSearch,
-                        ),
-
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined),
-                          tooltip: 'Settings',
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 20),
+                                tooltip: 'close',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: _toggleSearch,
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 24),
 
-                    Material(
-                      color: colors.surfaceContainer,
-                      borderRadius: BorderRadius.circular(20),
-                      child: InkWell(
+                    Hero(
+                      tag: 'main_entry_hero_card',
+                      child: Material(
+                        color: colors.surfaceContainer,
                         borderRadius: BorderRadius.circular(20),
-                        onTap: _openEditor,
-                        child: Container(
-                          width: double.infinity,
-                          height: 160,
-                          padding: const EdgeInsets.all(20),
-                          alignment: Alignment.topLeft,
-                          child: Text("What's on your mind today?",
-                              style: theme.textTheme.titleLarge),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: _openEditor,
+                          child: Container(
+                            width: double.infinity,
+                            height: 160,
+                            padding: const EdgeInsets.all(20),
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              "What's on your mind today?",
+                              style: theme.textTheme.titleLarge,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -203,15 +279,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final repository =
                                 ref.read(journalRepositoryProvider);
 
-                            final overlayState = Overlay.of(context);
-
                             await repository.deleteEntry(entry.id);
 
-                            showUndoToast(
-                              overlayState,
-                              message: 'entry deleted',
-                              onUndo: () => repository.restoreEntry(entry),
-                            );
+                            if (context.mounted) {
+                              AppToast.showUndo(
+                                context,
+                                message: 'entry deleted',
+                                onUndo: () => repository.restoreEntry(entry),
+                              );
+                            }
                           },
                           child: HistoryEntryCard(
                             entry: entry,
