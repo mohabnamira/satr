@@ -7,46 +7,46 @@ String pickGreeting({DateTime? now}) {
   List<String> pool;
   if (hour >= 1 && hour <= 5) {
     pool = const [
-      'staying up late?',
+      'up late?',
       'still awake?',
       'night thoughts?',
-      'mind still running?',
+      'mind running?',
       'quiet hours.',
     ];
   } else if (hour >= 6 && hour <= 8) {
     pool = const [
       'a new start.',
       'quiet morning.',
-      'initial thoughts?',
-      "here's to today.",
+      'first thoughts?',
       'good morning.',
+      "here's to today.",
     ];
   } else if (hour >= 9 && hour <= 11) {
     pool = const [
-      'step back for a second.',
-      'reset for a moment.',
-      "what's on your mind?",
+      'step back a sec.',
+      'reset a moment.',
+      "what's up?",
       'taking a moment.',
-      'how are things looking?',
+      "how's it going?",
     ];
   } else if (hour >= 12 && hour <= 16) {
     pool = const [
-      'how is your day going?',
+      "how's the day?",
       'halfway through.',
-      'catching your breath?',
-      'pausing the hustle.',
+      'quick breather?',
+      'pausing a bit.',
     ];
   } else if (hour >= 17 && hour <= 20) {
     pool = const [
-      'easing into the night.',
-      'time to unburden.',
+      'into the night.',
+      'time to unwind.',
       'good evening.',
-      'how was the day?',
+      'how was today?',
     ];
   } else {
     pool = const [
-      'nightfall stillness.',
-      'letting the day go.',
+      'nightfall.',
+      'letting it go.',
       'wrapping up.',
       'time to reflect.',
     ];

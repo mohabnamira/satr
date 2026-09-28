@@ -115,11 +115,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         firstChild: Row(
                           children: [
                             Expanded(
-                              child: Text(
-                                greeting,
-                                style: theme.textTheme.headlineMedium,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  greeting,
+                                  style: theme.textTheme.headlineMedium,
+                                  maxLines: 1,
+                                ),
                               ),
                             ),
                             IconButton(
