@@ -2,20 +2,24 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+satr is currently in active development. Only the latest released version
+receives fixes.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| latest  | ✅        |
+| older   | ❌        |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+satr is a fully offline, local-only app with no backend, no accounts, and
+no network dependency — so the attack surface is intentionally small
+(mainly local storage and PIN handling).
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+If you find a security issue (e.g. related to PIN storage, secure storage
+usage, or data export/import), please open a
+[GitHub issue](https://github.com/mohabnamira/satr/issues) or contact me
+directly rather than disclosing it publicly with exploit details.
+
+I'll do my best to respond and patch within a reasonable timeframe given
+this is a solo/hobby project.
