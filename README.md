@@ -1,16 +1,23 @@
 # satr
 
+[![Release](https://github.com/mohabnamira/satr/actions/workflows/release.yml/badge.svg)](https://github.com/mohabnamira/satr/actions/workflows/release.yml)
+
 **A quiet, private journal that starts the sentence for you.**
 
 satr (Arabic: سطر, "a line") is an offline-first journaling app built with Flutter. It is designed for people who want to write but do not know where to begin. Instead of a blank page, satr offers a calm writing surface and a library of reflective prompts, and keeps every entry on your device.
 
-> Status: v1.0.0 (feature complete for V1, currently in polish and release preparation)
+> Status: v1.0.0 released — see [Releases](https://github.com/mohabnamira/satr/releases) for the changelog
+
+## Download
+Grab the latest APK from [Releases](https://github.com/mohabnamira/satr/releases/latest) — no build required.
+
 
 ---
 
 ## Table of Contents
 
 - [Key Features](#key-features)
+- [Download](#download)
 - [Visual Showcase](#visual-showcase)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
