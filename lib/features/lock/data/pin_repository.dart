@@ -1,49 +1,53 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:satr/core/constants/app_constants.dart';
 
 class PinStorageException implements Exception {
-  PinStorageException(this.message);
+  const PinStorageException(this.message);
   final String message;
+
+  @override
+  String toString() => message;
 }
 
 class PinRepository {
   final _storage = const FlutterSecureStorage();
-  static const _key = 'nook_pin';
 
   Future<bool> hasPin() async {
     try {
-      return await _storage.read(key: _key) != null;
-    } catch (e) {
-      debugPrint('PinRepository.hasPin failed: $e');
+      final pin = await _storage.read(key: kPinStorageKey);
+      return pin != null && pin.isNotEmpty;
+    } catch (e, stack) {
+      debugPrint('PinRepository.hasPin failed: $e\n$stack');
       return false;
     }
   }
 
   Future<void> setPin(String pin) async {
     try {
-      await _storage.write(key: _key, value: pin);
-    } catch (e) {
-      debugPrint('PinRepository.setPin failed: $e');
-      throw PinStorageException("Couldn't save your PIN. Please try again.");
+      await _storage.write(key: kPinStorageKey, value: pin);
+    } catch (e, stack) {
+      debugPrint('PinRepository.setPin failed: $e\n$stack');
+      throw const PinStorageException("couldn't save your pin. please try again");
     }
   }
 
   Future<bool> verify(String pin) async {
     try {
-      return await _storage.read(key: _key) == pin;
-    } catch (e) {
-      debugPrint('PinRepository.verify failed: $e');
-      throw PinStorageException("Couldn't check your PIN. Please try again.");
+      final stored = await _storage.read(key: kPinStorageKey);
+      return stored == pin;
+    } catch (e, stack) {
+      debugPrint('PinRepository.verify failed: $e\n$stack');
+      throw const PinStorageException("couldn't check your pin. please try again");
     }
   }
 
   Future<void> clearPin() async {
     try {
-      await _storage.delete(key: _key);
-    } catch (e) {
-      debugPrint('PinRepository.clearPin failed: $e');
-      throw PinStorageException("Couldn't remove your PIN. Please try again.");
+      await _storage.delete(key: kPinStorageKey);
+    } catch (e, stack) {
+      debugPrint('PinRepository.clearPin failed: $e\n$stack');
+      throw const PinStorageException("couldn't remove your pin. please try again");
     }
   }
 }

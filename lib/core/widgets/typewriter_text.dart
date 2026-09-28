@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:satr/core/constants/app_constants.dart';
 
 /// Renders text with a smooth, character-by-character typewriter reveal animation.
 class TypewriterText extends StatefulWidget {
@@ -7,7 +8,7 @@ class TypewriterText extends StatefulWidget {
     super.key,
     required this.text,
     this.style,
-    this.durationPerChar = const Duration(milliseconds: 18),
+    this.durationPerChar = kTypewriterDurationPerChar,
     this.textDirection,
     this.textAlign,
     this.onComplete,
@@ -31,7 +32,9 @@ class _TypewriterTextState extends State<TypewriterText> {
   @override
   void initState() {
     super.initState();
-    _startAnimation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _startAnimation();
+    });
   }
 
   @override
@@ -44,14 +47,22 @@ class _TypewriterTextState extends State<TypewriterText> {
 
   void _startAnimation() {
     _timer?.cancel();
-    setState(() {
-      _charCount = 0;
-    });
 
     if (widget.text.isEmpty) {
+      setState(() => _charCount = 0);
       widget.onComplete?.call();
       return;
     }
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      setState(() => _charCount = widget.text.length);
+      widget.onComplete?.call();
+      return;
+    }
+
+    setState(() {
+      _charCount = 0;
+    });
 
     _timer = Timer.periodic(widget.durationPerChar, (timer) {
       if (!mounted) {
@@ -77,7 +88,8 @@ class _TypewriterTextState extends State<TypewriterText> {
 
   @override
   Widget build(BuildContext context) {
-    final visibleText = widget.text.substring(0, _charCount.clamp(0, widget.text.length));
+    final visibleText =
+        widget.text.substring(0, _charCount.clamp(0, widget.text.length));
 
     return Text(
       visibleText,

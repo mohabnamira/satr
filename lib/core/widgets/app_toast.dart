@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:satr/core/constants/app_constants.dart';
+import 'package:satr/core/theme/app_theme.dart';
 
 /// Global minimalist floating toast utility styled with a capsule shape,
 /// dark #1A1A1A background, subtle border, and crisp lowercase typography.
@@ -11,7 +13,7 @@ class AppToast {
   static void show(
     BuildContext context, {
     required String message,
-    Duration duration = const Duration(milliseconds: 2200),
+    Duration duration = kToastDuration,
   }) {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
@@ -28,7 +30,7 @@ class AppToast {
     BuildContext context, {
     required String message,
     required VoidCallback onUndo,
-    Duration duration = const Duration(milliseconds: 3000),
+    Duration duration = kToastUndoDuration,
   }) {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
@@ -46,7 +48,7 @@ class AppToast {
     OverlayState overlayState, {
     required String message,
     VoidCallback? onUndo,
-    Duration duration = const Duration(milliseconds: 2500),
+    Duration duration = kToastOverlayDuration,
   }) {
     _showOverlay(
       overlayState,
@@ -125,40 +127,44 @@ class _AppToastWidgetState extends State<_AppToastWidget> {
   void _dismiss() {
     if (!mounted) return;
     setState(() => _visible = false);
-    Future.delayed(const Duration(milliseconds: 220), widget.onDismiss);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final animDuration = disableAnimations ? Duration.zero : kToastAnimationDuration;
+    if (animDuration == Duration.zero) {
+      widget.onDismiss();
+    } else {
+      Future.delayed(animDuration, widget.onDismiss);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const toastBgColor = Color(0xFF1A1A1A);
-    const toastBorderColor = Color(0xFF333333);
-    const toastTextColor = Color(0xFFFFFFFF);
-    const toastMutedColor = Color(0xFF9E9E9E);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final animDuration = disableAnimations ? Duration.zero : kToastAnimationDuration;
+    final fadeDuration = disableAnimations ? Duration.zero : kToastFadeDuration;
 
     return Positioned(
-      left: 24,
-      right: 24,
+      left: kHorizontalPadding,
+      right: kHorizontalPadding,
       bottom: 32,
       child: IgnorePointer(
         ignoring: !_visible,
         child: AnimatedSlide(
-          duration: const Duration(milliseconds: 220),
+          duration: animDuration,
           curve: Curves.easeOutCubic,
           offset: _visible ? Offset.zero : const Offset(0, 0.35),
           child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
+            duration: fadeDuration,
             curve: Curves.easeOut,
             opacity: _visible ? 1.0 : 0.0,
             child: Center(
               child: Material(
                 color: Colors.transparent,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    color: toastBgColor,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: toastBorderColor, width: 1.0),
+                    color: AppTheme.toastBackground,
+                    borderRadius: BorderRadius.circular(kRadiusPill),
+                    border: Border.all(color: AppTheme.toastBorder, width: 1.0),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.35),
@@ -174,7 +180,7 @@ class _AppToastWidgetState extends State<_AppToastWidget> {
                         child: Text(
                           widget.message,
                           style: const TextStyle(
-                            color: toastTextColor,
+                            color: AppTheme.toastText,
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'WorkSans',
@@ -193,12 +199,12 @@ class _AppToastWidgetState extends State<_AppToastWidget> {
                             child: Text(
                               'undo',
                               style: TextStyle(
-                                color: toastTextColor,
+                                color: AppTheme.toastText,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 fontFamily: 'WorkSans',
                                 decoration: TextDecoration.underline,
-                                decorationColor: toastMutedColor,
+                                decorationColor: AppTheme.toastMuted,
                               ),
                             ),
                           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:satr/core/utils/text_direction.dart';
+import 'package:satr/features/entry/data/journal_entry.dart';
 import 'package:satr/features/prompts/data/prompt_category.dart';
-import 'package:satr/models/journal_entry.dart';
-import 'package:satr/core/text_direction.dart';
 
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
@@ -11,7 +11,6 @@ String formatTime(DateTime d) {
   final minute = d.minute.toString().padLeft(2, '0');
   return '$hour:$minute ${d.hour >= 12 ? 'PM' : 'AM'}';
 }
-
 
 String dayLabel(DateTime d) {
   final now = DateTime.now();
@@ -24,6 +23,7 @@ String dayLabel(DateTime d) {
   const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
   return '${days[d.weekday - 1]}, $date';
 }
+
 String? promptSourceLabel(JournalEntry entry) {
   for (final c in PromptCategory.values) {
     if (c.name == entry.promptCategory) return c.label;
@@ -32,8 +32,20 @@ String? promptSourceLabel(JournalEntry entry) {
 }
 
 String fullDateTime(DateTime d) {
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG',
-    'SEP', 'OCT', 'NOV', 'DEC'];
+  const months = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC'
+  ];
   return '${d.day} ${months[d.month - 1]} ${d.year}, ${formatTime(d)}';
 }
 
@@ -61,7 +73,6 @@ class HistoryEntryCard extends StatelessWidget {
   final JournalEntry entry;
   final VoidCallback onTap;
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -82,40 +93,49 @@ class HistoryEntryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                    child: prompt == null
-                      ? Text(entry.content,
+                  child: prompt == null
+                      ? Text(
+                          entry.content,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           textDirection: directionOf(entry.content),
-                          textAlign:
-                              isRtl(entry.content) ? TextAlign.right : TextAlign.left)
+                          textAlign: isRtl(entry.content)
+                              ? TextAlign.right
+                              : TextAlign.left,
+                        )
                       : Text.rich(
                           TextSpan(children: [
                             TextSpan(text: prompt, style: bold),
                             if (source != null)
                               TextSpan(
                                 text: ' from $source',
-                                style: bold.copyWith(color: colors.onSurfaceVariant),
+                                style: bold.copyWith(
+                                    color: colors.onSurfaceVariant),
                               ),
                           ]),
                           textDirection: directionOf(prompt),
-                          textAlign: isRtl(prompt) ? TextAlign.right : TextAlign.left,
+                          textAlign:
+                              isRtl(prompt) ? TextAlign.right : TextAlign.left,
                         ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   formatTime(entry.createdAt),
-                  style: body.copyWith(fontSize: 11, color: colors.onSurfaceVariant),
+                  style: body.copyWith(
+                      fontSize: 11, color: colors.onSurfaceVariant),
                 ),
               ],
             ),
             if (prompt != null) ...[
               const SizedBox(height: 8),
-              Text(entry.content,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  textDirection: directionOf(entry.content),
-                  textAlign: isRtl(entry.content) ? TextAlign.right : TextAlign.left),
+              Text(
+                entry.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textDirection: directionOf(entry.content),
+                textAlign:
+                    isRtl(entry.content) ? TextAlign.right : TextAlign.left,
+              ),
             ],
           ],
         ),

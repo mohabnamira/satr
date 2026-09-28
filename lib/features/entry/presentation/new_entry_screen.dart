@@ -1,14 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/journal_providers.dart';
-import '../models/journal_entry.dart';
-import '../features/prompts/application/prompt_providers.dart';
-import '../features/prompts/data/prompt.dart';
-import '../features/prompts/data/prompt_category.dart';
-import 'package:satr/core/text_direction.dart';
+import 'package:satr/core/constants/app_constants.dart';
+import 'package:satr/core/utils/storage_exception.dart';
+import 'package:satr/core/utils/text_direction.dart';
 import 'package:satr/core/widgets/app_toast.dart';
 import 'package:satr/core/widgets/typewriter_text.dart';
+import 'package:satr/features/entry/application/journal_providers.dart';
+import 'package:satr/features/entry/data/journal_entry.dart';
+import 'package:satr/features/prompts/application/prompt_providers.dart';
+import 'package:satr/features/prompts/data/prompt.dart';
+import 'package:satr/features/prompts/data/prompt_category.dart';
 
 class NewEntryScreen extends ConsumerStatefulWidget {
   const NewEntryScreen({super.key, this.entry, this.initialPrompt});
@@ -31,9 +32,9 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
     setState(() {
       _category = category;
       _prompt = ref.read(promptRepositoryProvider).randomPrompt(
-        category: category,
-        exclude: _prompt?.text,
-      );
+            category: category,
+            exclude: _prompt?.text,
+          );
     });
   }
 
@@ -66,22 +67,30 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
     if (text.isEmpty) return;
 
     final repository = ref.read(journalRepositoryProvider);
-    if (_isEditing) {
-      await repository.updateEntry(widget.entry!.id, text);
-    } else {
-      await repository.addEntry(
-        content: text,
-        promptUsed: _prompt?.text,
-        promptCategory: _prompt?.category.name,
-      );
-    }
+    try {
+      if (_isEditing) {
+        await repository.updateEntry(widget.entry!.id, text);
+      } else {
+        await repository.addEntry(
+          content: text,
+          promptUsed: _prompt?.text,
+          promptCategory: _prompt?.category.name,
+        );
+      }
 
-    if (mounted) {
-      AppToast.show(
-        context,
-        message: _isEditing ? 'entry updated' : 'entry saved',
-      );
-      Navigator.of(context).pop();
+      if (mounted) {
+        AppToast.show(
+          context,
+          message: _isEditing ? 'entry updated' : 'entry saved',
+        );
+        Navigator.of(context).pop();
+      }
+    } on StorageException catch (e) {
+      if (mounted) AppToast.show(context, message: e.message);
+    } catch (_) {
+      if (mounted) {
+        AppToast.show(context, message: "couldn't save entry. try again");
+      }
     }
   }
 
@@ -150,7 +159,7 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
                           textAlign: isRtl(_prompt!.text)
                               ? TextAlign.right
                               : TextAlign.left,
-                          durationPerChar: const Duration(milliseconds: 18),
+                          durationPerChar: kTypewriterDurationPerChar,
                         ),
                       ),
                       IconButton(
@@ -171,8 +180,9 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
               maxLines: null,
               expands: true,
               textDirection: _direction,
-              textAlign:
-                  _direction == TextDirection.rtl ? TextAlign.right : TextAlign.left,
+              textAlign: _direction == TextDirection.rtl
+                  ? TextAlign.right
+                  : TextAlign.left,
               textAlignVertical: TextAlignVertical.top,
               decoration: const InputDecoration(
                 hintText: "What's on your mind?",

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/journal_providers.dart';
-import 'new_entry_screen.dart';
-import '../features/prompts/application/prompt_providers.dart';
-import '../features/history/presentation/history_widgets.dart';
-import 'entry_view_screen.dart';
-import 'package:satr/core/greeting.dart';
+import 'package:satr/core/constants/app_constants.dart';
+import 'package:satr/core/theme/app_theme.dart';
+import 'package:satr/core/utils/greeting.dart';
+import 'package:satr/core/utils/storage_exception.dart';
 import 'package:satr/core/widgets/app_toast.dart';
-import 'settings_screen.dart';
+import 'package:satr/features/entry/application/journal_providers.dart';
+import 'package:satr/features/entry/presentation/entry_view_screen.dart';
+import 'package:satr/features/entry/presentation/new_entry_screen.dart';
+import 'package:satr/features/history/presentation/history_widgets.dart';
+import 'package:satr/features/home/application/search_providers.dart';
+import 'package:satr/features/prompts/application/prompt_providers.dart';
+import 'package:satr/features/settings/presentation/settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -53,14 +57,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openEditor({bool withPrompt = false}) {
     final prompt =
         withPrompt ? ref.read(promptRepositoryProvider).randomPrompt() : null;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     Navigator.of(context).push(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 350),
-        reverseTransitionDuration: const Duration(milliseconds: 300),
+        transitionDuration:
+            disableAnimations ? Duration.zero : kRouteTransitionDuration,
+        reverseTransitionDuration:
+            disableAnimations ? Duration.zero : kReverseRouteTransitionDuration,
         pageBuilder: (context, animation, secondaryAnimation) {
           return NewEntryScreen(initialPrompt: prompt);
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          if (disableAnimations) return child;
           return FadeTransition(
             opacity: CurvedAnimation(
               parent: animation,
@@ -73,46 +81,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String formatDate(DateTime date) {
-    final now = DateTime.now();
-    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
-
-    final yesterday = now.subtract(const Duration(days: 1));
-    final isYesterday =
-        date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day;
-
-    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = date.hour >= 12 ? 'PM' : 'AM';
-    final time = '$hour:$minute $period';
-
-    if (isToday) return 'Today, $time';
-    if (isYesterday) return 'Yesterday, $time';
-    return '${date.day}/${date.month}/${date.year}, $time';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final entriesAsync = ref.watch(filteredEntriesProvider);
     final query = ref.watch(searchQueryProvider);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: kHorizontalPadding),
               sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 48,
+                      height: kMinInteractiveDimension,
                       child: AnimatedCrossFade(
-                        duration: const Duration(milliseconds: 260),
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : kCrossfadeDuration,
                         firstCurve: Curves.easeInOutCubic,
                         secondCurve: Curves.easeInOutCubic,
                         sizeCurve: Curves.easeInOutCubic,
@@ -146,7 +139,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                         secondChild: Container(
-                          height: 48,
+                          height: kMinInteractiveDimension,
                           decoration: BoxDecoration(
                             color: colors.surfaceContainer,
                             borderRadius: BorderRadius.circular(24),
@@ -197,10 +190,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tag: 'main_entry_hero_card',
                       child: Material(
                         color: colors.surfaceContainer,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(kRadiusCard),
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(kRadiusCard),
                           onTap: _openEditor,
                           child: Container(
                             width: double.infinity,
@@ -230,7 +223,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-
 
             entriesAsync.when(
               data: (entries) {
@@ -267,26 +259,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           background: Container(
                             margin: const EdgeInsets.symmetric(vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1A1A1A),
+                              color: AppTheme.swipeDeleteBackground,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: const Icon(Icons.delete_outline,
-                                color: Color(0xFFC62828)),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: AppTheme.swipeDeleteIcon,
+                            ),
                           ),
                           onDismissed: (_) async {
                             final repository =
                                 ref.read(journalRepositoryProvider);
-
-                            await repository.deleteEntry(entry.id);
-
-                            if (context.mounted) {
-                              AppToast.showUndo(
-                                context,
-                                message: 'entry deleted',
-                                onUndo: () => repository.restoreEntry(entry),
-                              );
+                            try {
+                              await repository.deleteEntry(entry.id);
+                              if (context.mounted) {
+                                AppToast.showUndo(
+                                  context,
+                                  message: 'entry deleted',
+                                  onUndo: () async {
+                                    try {
+                                      await repository.restoreEntry(entry);
+                                    } on StorageException catch (e) {
+                                      if (context.mounted) {
+                                        AppToast.show(context, message: e.message);
+                                      }
+                                    } catch (_) {
+                                      if (context.mounted) {
+                                        AppToast.show(
+                                          context,
+                                          message: "couldn't restore entry. try again",
+                                        );
+                                      }
+                                    }
+                                  },
+                                );
+                              }
+                            } on StorageException catch (e) {
+                              if (context.mounted) {
+                                AppToast.show(context, message: e.message);
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                AppToast.show(
+                                  context,
+                                  message: "couldn't delete entry. try again",
+                                );
+                              }
                             }
                           },
                           child: HistoryEntryCard(
@@ -304,9 +324,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
               loading: () => const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator())),
-              error: (err, stack) =>
-                  SliverToBoxAdapter(child: Center(child: Text('Error: $err'))),
+                child: SizedBox.shrink(),
+              ),
+              error: (err, stack) => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "couldn't load your entries",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => ref.invalidate(journalEntriesProvider),
+                          child: const Text('retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

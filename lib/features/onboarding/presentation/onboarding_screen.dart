@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../features/lock/application/lock_providers.dart';
-import '../main.dart';
-import 'home_screen.dart';
+import 'package:satr/core/constants/app_constants.dart';
+import 'package:satr/core/utils/storage_exception.dart';
+import 'package:satr/features/home/presentation/home_screen.dart';
+import 'package:satr/features/lock/application/lock_providers.dart';
+import 'package:satr/features/onboarding/application/onboarding_providers.dart';
+import 'package:satr/features/settings/application/settings_providers.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -40,26 +43,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    // Persist first launch status as false
     final settingsRepo = ref.read(settingsRepositoryProvider);
-    await settingsRepo.setFirstLaunch(false);
+    try {
+      await settingsRepo.setFirstLaunch(false);
+    } on StorageException catch (e) {
+      debugPrint('Error saving first launch preference: $e');
+    }
 
-    // Update riverpod first launch state
     ref.read(isFirstLaunchProvider.notifier).state = false;
 
-    // Check if locked with PIN
     final hasPin = await ref.read(pinRepositoryProvider).hasPin();
     if (!hasPin) {
       ref.read(unlockedProvider.notifier).state = true;
     }
 
     if (mounted) {
+      final disableAnimations = MediaQuery.disableAnimationsOf(context);
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 400),
+          transitionDuration: disableAnimations
+              ? Duration.zero
+              : kOnboardingTransitionDuration,
           pageBuilder: (context, animation, secondaryAnimation) =>
               const HomeScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            if (disableAnimations) return child;
             return FadeTransition(
               opacity: CurvedAnimation(
                 parent: animation,
@@ -92,7 +100,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   AnimatedOpacity(
                     opacity: isLastPage ? 0.0 : 1.0,
-                    duration: const Duration(milliseconds: 200),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
                     child: TextButton(
                       onPressed: isLastPage ? null : _completeOnboarding,
                       style: TextButton.styleFrom(
@@ -165,7 +175,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     children: List.generate(_pages.length, (index) {
                       final isSelected = index == _currentPage;
                       return AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 250),
                         curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         height: 6,
@@ -208,7 +220,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         : OutlinedButton(
                             onPressed: () {
                               _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
+                                duration:
+                                    MediaQuery.disableAnimationsOf(context)
+                                        ? Duration.zero
+                                        : const Duration(milliseconds: 300),
                                 curve: Curves.easeInOutCubic,
                               );
                             },
