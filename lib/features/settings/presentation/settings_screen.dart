@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:satr/core/constants/app_constants.dart';
+import 'package:satr/core/theme/app_theme.dart';
 import 'package:satr/core/utils/storage_exception.dart';
 import 'package:satr/core/widgets/app_toast.dart';
 import 'package:satr/features/entry/application/journal_providers.dart';
@@ -360,11 +361,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
+            child: const Text(
               'clear',
-              style: TextStyle(
-                color: Theme.of(dialogContext).colorScheme.error,
-              ),
+              style: TextStyle(color: AppTheme.dangerRed),
             ),
           ),
         ],

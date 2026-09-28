@@ -10,8 +10,11 @@ class AppTheme {
   static const Color toastText = Color(0xFFFFFFFF);
   static const Color toastMuted = Color(0xFF9E9E9E);
 
+  /// Canonical red for all destructive / danger actions.
+  static const Color dangerRed = Color(0xFFC62828);
+
   static const Color swipeDeleteBackground = Color(0xFF1A1A1A);
-  static const Color swipeDeleteIcon = Color(0xFFC62828);
+  static const Color swipeDeleteIcon = dangerRed;
 
   static ThemeData get light => _build(
         const ColorScheme.light(
@@ -23,7 +26,7 @@ class AppTheme {
           outlineVariant: Color(0xFFD1D1D6),
           primary: Color(0xFF000000),
           onPrimary: Color(0xFFFFFFFF),
-          error: Color(0xFFC62828),
+          error: dangerRed,
           onError: Color(0xFFFFFFFF),
         ),
       );
@@ -38,8 +41,8 @@ class AppTheme {
           outlineVariant: Color(0xFF3A3A3C),
           primary: Color(0xFFFFFFFF),
           onPrimary: Color(0xFF000000),
-          error: Color(0xFFE57373),
-          onError: Color(0xFF000000),
+          error: dangerRed,
+          onError: Color(0xFFFFFFFF),
         ),
       );
 
