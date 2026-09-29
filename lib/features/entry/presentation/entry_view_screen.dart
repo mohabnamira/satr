@@ -71,7 +71,9 @@ class EntryViewScreen extends ConsumerWidget {
                     Navigator.of(context).pop();
                   }
                 } on StorageException catch (e) {
-                  if (context.mounted) AppToast.show(context, message: e.message);
+                  if (context.mounted) {
+                    AppToast.show(context, message: e.message);
+                  }
                 } catch (_) {
                   if (context.mounted) {
                     AppToast.show(
@@ -111,11 +113,13 @@ class EntryViewScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
+                    tooltip: 'back',
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.more_vert),
+                    tooltip: 'entry options',
                     onPressed: () => _openMenu(context, ref),
                   ),
                 ],
